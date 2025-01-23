@@ -11,6 +11,11 @@ app.use(express.json());
 
 // Call handler route
 app.post('/incomingCall', async (req, res) => {
+
+if (req.body.validationCode) {
+    return res.status(200).send(req.body.validationCode);
+    }
+
   try {
     const { incomingCallContext } = req.body;
     
