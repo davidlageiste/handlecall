@@ -9,13 +9,22 @@ const callAutomationClient = new CallAutomationClient(process.env.AZURE_CONNECTI
 const app = express();
 app.use(express.json());
 
+app.use((req, res, next) => {
+    console.log('Incoming request:');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    next();
+});
+
 // Call handler route
 app.post('/incomingCall', async (req, res) => {
-
-if (req.body.validationCode) {
-    return res.status(200).send(req.body.validationCode);
+    if (req.body[0] && req.body[0].eventType === 'Microsoft.EventGrid.SubscriptionValidationEvent') {
+        const validationCode = req.body[0].data.validationCode;
+        return res.status(200).json({
+          validationResponse: validationCode
+        });
     }
-
+    
   try {
     const { incomingCallContext } = req.body;
     
@@ -35,8 +44,11 @@ if (req.body.validationCode) {
 
     res.status(200).json({ message: 'Call handled successfully' });
   } catch (error) {
-    console.error('Error handling call:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Detailed error handling call:', error);
+    res.status(500).json({ 
+      error: error.message,
+      stack: error.stack 
+    });
   }
 });
 
